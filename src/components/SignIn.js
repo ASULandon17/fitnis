@@ -16,6 +16,7 @@ function SignIn() {
 
     try {
       if (isLogin) {
+        // eslint-disable-next-line no-unused-vars
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -28,6 +29,7 @@ function SignIn() {
           // You can redirect user here later
         }
       } else {
+        // eslint-disable-next-line no-unused-vars
         const { data, error } = await supabase.auth.signUp({
           email,
           password
