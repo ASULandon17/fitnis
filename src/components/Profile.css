@@ -249,4 +249,35 @@
   .profile-actions {
     justify-content: center;
   }
+
+  .upload-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-btn.cancel {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.edit-btn.cancel:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.message.info {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  transform: none;
+}
 }
