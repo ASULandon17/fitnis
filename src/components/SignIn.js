@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
-import { supabase } from '../supabaseClient';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './SignIn.css';
 
 function SignIn() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  
+  const { currentUser, signIn, signUp } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,23 +28,17 @@ function SignIn() {
 
     try {
       if (isLogin) {
-        // eslint-disable-next-line no-unused-vars
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+        const { error } = await signIn(email, password);
         
         if (error) {
           setMessage(error.message);
         } else {
           setMessage('Successfully signed in!');
-          // You can redirect user here later
+          // Navigation will happen automatically due to useEffect
         }
       } else {
-        // eslint-disable-next-line no-unused-vars
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password
+        const { error } = await signUp(email, password, { 
+          full_name: fullName 
         });
         
         if (error) {
@@ -59,6 +65,19 @@ function SignIn() {
             </div>
           )}
           <form onSubmit={handleSubmit}>
+            {!isLogin && (
+              <div className="form-group">
+                <label htmlFor="fullName">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required={!isLogin}
+                  disabled={loading}
+                />
+              </div>
+            )}
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
