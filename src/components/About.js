@@ -5,7 +5,7 @@ function About() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>About Fitnis</h1>
+        <h1>About Fitniss</h1>
         <p>Coming soon! Learn more about our mission to help you live a healthier lifestyle.</p>
       </div>
     </div>

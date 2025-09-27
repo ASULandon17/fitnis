@@ -6,7 +6,7 @@ function Home() {
     <div className="home">
       <div className="hero-section">
         <div className="hero-content">
-          <h1>Welcome to Your Fitnis Journey</h1>
+          <h1>Welcome to Your Fitniss Journey</h1>
           <p>Transform your lifestyle with personalized workouts, nutrition tracking, and expert guidance.</p>
           <div className="hero-buttons">
             <button className="btn-primary">Get Started</button>
