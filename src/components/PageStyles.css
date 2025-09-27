@@ -1,0 +1,26 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d4a2d 50%, #1a1a1a 100%);
+  padding: 4rem 2rem;
+}
+
+.page-header {
+  text-align: center;
+  color: white;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.page-header h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-header p {
+  font-size: 1.25rem;
+  color: #d1d5db;
+}
