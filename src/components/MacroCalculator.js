@@ -6,8 +6,6 @@ import {
   calculateCompleteMacros,
   convertLbsToKg,
   convertKgToLbs,
-  convertInchesToCm,
-  convertCmToInches,
   convertFeetInchesToCm
 } from '../utils/MacroCalculator';
 import './MacroCalculator.css';
