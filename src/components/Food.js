@@ -1,10 +1,13 @@
-import React from 'react';
+// components/Food.js
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import MacroCalculator from './MacroCalculator';
+import FoodSearch from './FoodSearch';
 import './Food.css';
 
 function Food() {
   const { currentUser, userProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState('calculator'); // 'calculator' or 'search'
 
   const hasMacros = userProfile?.target_calories;
 
@@ -16,7 +19,7 @@ function Food() {
           {!hasMacros ? (
             <p>Let's calculate your personalized macros to help you reach your goals!</p>
           ) : (
-            <p>Your current macro targets are set. Recalculate if your goals have changed!</p>
+            <p>Your current macro targets are set. Search foods to help hit your goals!</p>
           )}
         </div>
 
@@ -48,7 +51,31 @@ function Food() {
                 </p>
               </div>
             )}
-            <MacroCalculator />
+
+            {/* Tab Navigation */}
+            <div className="food-tabs">
+              <button
+                className={`food-tab ${activeTab === 'calculator' ? 'active' : ''}`}
+                onClick={() => setActiveTab('calculator')}
+              >
+                📊 Macro Calculator
+              </button>
+              <button
+                className={`food-tab ${activeTab === 'search' ? 'active' : ''}`}
+                onClick={() => setActiveTab('search')}
+              >
+                🔍 Food Search
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="tab-content">
+              {activeTab === 'calculator' ? (
+                <MacroCalculator />
+              ) : (
+                <FoodSearch />
+              )}
+            </div>
           </>
         ) : (
           <div className="signin-prompt">
