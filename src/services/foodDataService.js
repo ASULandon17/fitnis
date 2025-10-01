@@ -1,8 +1,12 @@
 // services/foodDataService.js
-import { supabase } from '../supabaseClient';
-
 const USDA_API_KEY = process.env.REACT_APP_USDA_API_KEY;
 const USDA_BASE_URL = 'https://api.nal.usda.gov/fdc/v1';
+const PEXELS_API_KEY = process.env.REACT_APP_PEXELS_API_KEY; // Free API for food images
+const EDAMAM_APP_ID = process.env.REACT_APP_EDAMAM_APP_ID; // Alternative for food images
+const EDAMAM_APP_KEY = process.env.REACT_APP_EDAMAM_APP_KEY;
+
+// Cache for food images to reduce API calls
+const imageCache = new Map();
 
 export const searchFoods = async (query, pageSize = 25, pageNumber = 1) => {
   try {
@@ -21,8 +25,18 @@ export const searchFoods = async (query, pageSize = 25, pageNumber = 1) => {
     }
 
     const data = await response.json();
+    
+    // Process foods and add images
+    const foodsWithImages = await Promise.all(
+      data.foods.map(async (food) => {
+        const formattedFood = formatFoodData(food);
+        formattedFood.image = await getFoodImage(formattedFood.name, formattedFood.brand);
+        return formattedFood;
+      })
+    );
+
     return {
-      foods: data.foods.map(food => formatFoodData(food)),
+      foods: foodsWithImages,
       totalResults: data.totalHits,
       currentPage: data.currentPage || pageNumber,
       totalPages: data.totalPages || Math.ceil(data.totalHits / pageSize)
@@ -70,6 +84,73 @@ const formatFoodData = (food) => {
   };
 };
 
+// Get food image using multiple strategies
+export const getFoodImage = async (foodName, brand = null) => {
+  const cacheKey = `${foodName}_${brand || ''}`.toLowerCase();
+  
+  // Check cache first
+  if (imageCache.has(cacheKey)) {
+    return imageCache.get(cacheKey);
+  }
+
+  let imageUrl = null;
+
+  // Try Edamam first (better food-specific images)
+  if (EDAMAM_APP_ID && EDAMAM_APP_KEY) {
+    try {
+      const searchTerm = brand ? `${brand} ${foodName}` : foodName;
+      const response = await fetch(
+        `https://api.edamam.com/api/food-database/v2/parser?app_id=${EDAMAM_APP_ID}&app_key=${EDAMAM_APP_KEY}&ingr=${encodeURIComponent(searchTerm)}`,
+        { method: 'GET' }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.hints?.[0]?.food?.image) {
+          imageUrl = data.hints[0].food.image;
+        }
+      }
+    } catch (error) {
+      console.error('Edamam image fetch error:', error);
+    }
+  }
+
+  // Fallback to Pexels for generic food images
+  if (!imageUrl && PEXELS_API_KEY) {
+    try {
+      const simplifiedName = foodName.split(',')[0].split('-')[0].trim();
+      const response = await fetch(
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(simplifiedName + ' food')}&per_page=1`,
+        {
+          headers: {
+            'Authorization': PEXELS_API_KEY
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.photos?.[0]?.src?.medium) {
+          imageUrl = data.photos[0].src.medium;
+        }
+      }
+    } catch (error) {
+      console.error('Pexels image fetch error:', error);
+    }
+  }
+
+  // Fallback to placeholder
+  if (!imageUrl) {
+    imageUrl = `https://via.placeholder.com/300x200/2d4a2d/4ade80?text=${encodeURIComponent(foodName.substring(0, 20))}`;
+  }
+
+  // Cache the result
+  imageCache.set(cacheKey, imageUrl);
+  
+  return imageUrl;
+};
+
+// Existing functions...
 export const getFoodDetails = async (fdcId) => {
   try {
     const response = await fetch(
@@ -87,14 +168,15 @@ export const getFoodDetails = async (fdcId) => {
     }
 
     const data = await response.json();
-    return formatFoodData(data);
+    const formattedFood = formatFoodData(data);
+    formattedFood.image = await getFoodImage(formattedFood.name, formattedFood.brand);
+    return formattedFood;
   } catch (error) {
     console.error('Error fetching food details:', error);
     return null;
   }
 };
 
-// Filter foods by macro requirements
 export const filterFoodsByMacros = (foods, filters) => {
   return foods.filter(food => {
     if (filters.minProtein && food.protein < filters.minProtein) return false;
@@ -106,7 +188,6 @@ export const filterFoodsByMacros = (foods, filters) => {
   });
 };
 
-// Calculate how much of a food is needed to hit a macro target
 export const calculateServingsForTarget = (food, targetMacro, macroType) => {
   const foodMacro = food[macroType];
   if (!foodMacro || foodMacro === 0) return null;
@@ -122,19 +203,4 @@ export const calculateServingsForTarget = (food, targetMacro, macroType) => {
     carbs: Math.round(food.carbs * servingsNeeded * 10) / 10,
     fat: Math.round(food.fat * servingsNeeded * 10) / 10
   };
-};
-
-export const saveFoodToCache = async (food) => {
-  const { error } = await supabase
-    .from('foods')
-    .upsert({
-      id: food.id,
-      ...food,
-      last_updated: new Date().toISOString()
-    }, {
-      onConflict: 'id',
-      update: ['search_count']
-    });
-  
-  if (error) console.error('Error caching food:', error);
 };

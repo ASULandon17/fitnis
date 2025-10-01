@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import MacroCalculator from './MacroCalculator';
 import FoodSearch from './FoodSearch';
+import MyMeals from './MyMeals';
 import './Food.css';
 
 function Food() {
   const { currentUser, userProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState('calculator'); // 'calculator' or 'search'
+  const [activeTab, setActiveTab] = useState('calculator');
 
   const hasMacros = userProfile?.target_calories;
 
@@ -19,7 +20,7 @@ function Food() {
           {!hasMacros ? (
             <p>Let's calculate your personalized macros to help you reach your goals!</p>
           ) : (
-            <p>Your current macro targets are set. Search foods to help hit your goals!</p>
+            <p>Your current macro targets are set. Search foods and create meals to hit your goals!</p>
           )}
         </div>
 
@@ -66,15 +67,19 @@ function Food() {
               >
                 🔍 Food Search
               </button>
+              <button
+                className={`food-tab ${activeTab === 'meals' ? 'active' : ''}`}
+                onClick={() => setActiveTab('meals')}
+              >
+                🍽️ My Meals
+              </button>
             </div>
 
             {/* Tab Content */}
             <div className="tab-content">
-              {activeTab === 'calculator' ? (
-                <MacroCalculator />
-              ) : (
-                <FoodSearch />
-              )}
+              {activeTab === 'calculator' && <MacroCalculator />}
+              {activeTab === 'search' && <FoodSearch />}
+              {activeTab === 'meals' && <MyMeals />}
             </div>
           </>
         ) : (
