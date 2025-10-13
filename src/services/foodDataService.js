@@ -1,8 +1,8 @@
 // services/foodDataService.js
 const USDA_API_KEY = process.env.REACT_APP_USDA_API_KEY;
 const USDA_BASE_URL = 'https://api.nal.usda.gov/fdc/v1';
-const PEXELS_API_KEY = process.env.REACT_APP_PEXELS_API_KEY; // Free API for food images
-const EDAMAM_APP_ID = process.env.REACT_APP_EDAMAM_APP_ID; // Alternative for food images
+const PEXELS_API_KEY = process.env.REACT_APP_PEXELS_API_KEY;
+const EDAMAM_APP_ID = process.env.REACT_APP_EDAMAM_APP_ID;
 const EDAMAM_APP_KEY = process.env.REACT_APP_EDAMAM_APP_KEY;
 
 // Cache for food images to reduce API calls
@@ -26,17 +26,18 @@ export const searchFoods = async (query, pageSize = 25, pageNumber = 1) => {
 
     const data = await response.json();
     
-    // Process foods and add images
-    const foodsWithImages = await Promise.all(
-      data.foods.map(async (food) => {
-        const formattedFood = formatFoodData(food);
-        formattedFood.image = await getFoodImage(formattedFood.name, formattedFood.brand);
-        return formattedFood;
-      })
-    );
+    // Process foods WITHOUT waiting for images - load them async
+    const foods = data.foods.map(food => {
+      const formattedFood = formatFoodData(food);
+      // Set placeholder immediately
+      formattedFood.image = getPlaceholderImage(formattedFood.name);
+      // Load actual image asynchronously (non-blocking)
+      loadImageAsync(formattedFood);
+      return formattedFood;
+    });
 
     return {
-      foods: foodsWithImages,
+      foods: foods,
       totalResults: data.totalHits,
       currentPage: data.currentPage || pageNumber,
       totalPages: data.totalPages || Math.ceil(data.totalHits / pageSize)
@@ -45,6 +46,22 @@ export const searchFoods = async (query, pageSize = 25, pageNumber = 1) => {
     console.error('Error searching foods:', error);
     return { foods: [], totalResults: 0, error: error.message };
   }
+};
+
+// Non-blocking image loader
+const loadImageAsync = (food) => {
+  getFoodImage(food.name, food.brand).then(imageUrl => {
+    food.image = imageUrl;
+  }).catch(err => {
+    console.warn('Failed to load image for', food.name, err);
+    // Keep placeholder
+  });
+};
+
+// Get placeholder image immediately
+const getPlaceholderImage = (foodName) => {
+  const shortName = encodeURIComponent(foodName.substring(0, 15));
+  return `https://via.placeholder.com/300x200/2d4a2d/4ade80?text=${shortName}`;
 };
 
 const formatFoodData = (food) => {
@@ -84,7 +101,7 @@ const formatFoodData = (food) => {
   };
 };
 
-// Get food image using multiple strategies
+// Get food image using multiple strategies with TIMEOUT
 export const getFoodImage = async (foodName, brand = null) => {
   const cacheKey = `${foodName}_${brand || ''}`.toLowerCase();
   
@@ -95,14 +112,22 @@ export const getFoodImage = async (foodName, brand = null) => {
 
   let imageUrl = null;
 
-  // Try Edamam first (better food-specific images)
-  if (EDAMAM_APP_ID && EDAMAM_APP_KEY) {
+  // Only try Edamam if keys are provided
+  if (EDAMAM_APP_ID && EDAMAM_APP_KEY && EDAMAM_APP_ID.length > 0 && EDAMAM_APP_KEY.length > 0) {
     try {
       const searchTerm = brand ? `${brand} ${foodName}` : foodName;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
       const response = await fetch(
         `https://api.edamam.com/api/food-database/v2/parser?app_id=${EDAMAM_APP_ID}&app_key=${EDAMAM_APP_KEY}&ingr=${encodeURIComponent(searchTerm)}`,
-        { method: 'GET' }
+        { 
+          method: 'GET',
+          signal: controller.signal 
+        }
       );
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
@@ -111,22 +136,32 @@ export const getFoodImage = async (foodName, brand = null) => {
         }
       }
     } catch (error) {
-      console.error('Edamam image fetch error:', error);
+      if (error.name === 'AbortError') {
+        console.warn('Edamam request timeout for:', foodName);
+      } else {
+        console.warn('Edamam image fetch error:', error.message);
+      }
     }
   }
 
-  // Fallback to Pexels for generic food images
-  if (!imageUrl && PEXELS_API_KEY) {
+  // Only try Pexels if key is provided and we don't have an image yet
+  if (!imageUrl && PEXELS_API_KEY && PEXELS_API_KEY.length > 0) {
     try {
       const simplifiedName = foodName.split(',')[0].split('-')[0].trim();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+      
       const response = await fetch(
         `https://api.pexels.com/v1/search?query=${encodeURIComponent(simplifiedName + ' food')}&per_page=1`,
         {
           headers: {
             'Authorization': PEXELS_API_KEY
-          }
+          },
+          signal: controller.signal
         }
       );
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
@@ -135,13 +170,17 @@ export const getFoodImage = async (foodName, brand = null) => {
         }
       }
     } catch (error) {
-      console.error('Pexels image fetch error:', error);
+      if (error.name === 'AbortError') {
+        console.warn('Pexels request timeout for:', foodName);
+      } else {
+        console.warn('Pexels image fetch error:', error.message);
+      }
     }
   }
 
   // Fallback to placeholder
   if (!imageUrl) {
-    imageUrl = `https://via.placeholder.com/300x200/2d4a2d/4ade80?text=${encodeURIComponent(foodName.substring(0, 20))}`;
+    imageUrl = getPlaceholderImage(foodName);
   }
 
   // Cache the result
@@ -150,7 +189,6 @@ export const getFoodImage = async (foodName, brand = null) => {
   return imageUrl;
 };
 
-// Existing functions...
 export const getFoodDetails = async (fdcId) => {
   try {
     const response = await fetch(
@@ -169,7 +207,9 @@ export const getFoodDetails = async (fdcId) => {
 
     const data = await response.json();
     const formattedFood = formatFoodData(data);
-    formattedFood.image = await getFoodImage(formattedFood.name, formattedFood.brand);
+    formattedFood.image = getPlaceholderImage(formattedFood.name);
+    // Load actual image async
+    loadImageAsync(formattedFood);
     return formattedFood;
   } catch (error) {
     console.error('Error fetching food details:', error);

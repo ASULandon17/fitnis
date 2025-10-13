@@ -29,23 +29,34 @@ function MyMeals() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (currentUser) {
-      loadMeals();
-    }
-  }, [currentUser]);
+  if (currentUser) {
+    loadMeals();
+  } else {
+    setLoading(false);
+  }
+}, [currentUser]);
 
   useEffect(() => {
     applyFilters();
   }, [meals, filters, searchTerm]);
 
   const loadMeals = async () => {
-    setLoading(true);
+  setLoading(true);
+  try {
     const { data, error } = await getUserMeals(currentUser.id);
-    if (!error) {
+    if (error) {
+      console.error('Error loading meals:', error);
+      setMeals([]);
+    } else {
       setMeals(data || []);
     }
+  } catch (err) {
+    console.error('Exception loading meals:', err);
+    setMeals([]);
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   const applyFilters = () => {
     let filtered = [...meals];
