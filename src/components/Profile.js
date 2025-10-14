@@ -13,12 +13,12 @@ function Profile() {
   const [formData, setFormData] = useState({
     username: '',
     full_name: '',
-    fitness_goals: ''
+    fitness_goal: ''
   });
 
   // Redirect if not logged in
   useEffect(() => {
-    console.log('Profile: Checking auth, currentUser:', currentUser);
+    console.log('Profile: Checking auth, currentUser:', currentUser, 'authLoading:', authLoading);
     if (!authLoading && !currentUser) {
       console.log('Profile: No user, redirecting to signin');
       navigate('/signin');
@@ -32,7 +32,7 @@ function Profile() {
       setFormData({
         username: userProfile.username || '',
         full_name: userProfile.full_name || '',
-        fitness_goals: userProfile.fitness_goals || ''
+        fitness_goal: userProfile.fitness_goal || ''
       });
     }
   }, [userProfile]);
@@ -139,8 +139,8 @@ function Profile() {
     }
   };
 
-  // Show loading state
-  if (authLoading) {
+  // Show loading state only during initial auth check
+  if (authLoading && !currentUser) {
     return (
       <div className="profile-page">
         <div className="profile-container">
@@ -223,7 +223,7 @@ function Profile() {
                     setFormData({
                       username: userProfile?.username || '',
                       full_name: userProfile?.full_name || '',
-                      fitness_goals: userProfile?.fitness_goals || ''
+                      fitness_goal: userProfile?.fitness_goal || ''
                     });
                   }}
                   disabled={loading}
@@ -267,18 +267,26 @@ function Profile() {
               </div>
 
               <div className="form-group">
-                <label>Fitness Goals</label>
+                <label>Fitness Goal</label>
                 {editing ? (
-                  <textarea
-                    name="fitness_goals"
-                    value={formData.fitness_goals}
+                  <select
+                    name="fitness_goal"
+                    value={formData.fitness_goal || ''}
                     onChange={handleInputChange}
-                    placeholder="What are your fitness goals?"
-                    rows="4"
                     disabled={loading}
-                  />
+                  >
+                    <option value="">Select a goal</option>
+                    <option value="gain_muscle">Gain Muscle</option>
+                    <option value="lose_fat">Lose Fat</option>
+                    <option value="body_recomposition">Body Recomposition</option>
+                  </select>
                 ) : (
-                  <p>{formData.fitness_goals || 'No goals set yet'}</p>
+                  <p>
+                    {formData.fitness_goal === 'gain_muscle' && 'Gain Muscle'}
+                    {formData.fitness_goal === 'lose_fat' && 'Lose Fat'}
+                    {formData.fitness_goal === 'body_recomposition' && 'Body Recomposition'}
+                    {!formData.fitness_goal && 'Not set'}
+                  </p>
                 )}
               </div>
 

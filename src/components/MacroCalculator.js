@@ -331,47 +331,56 @@ function MacroCalculator() {
         );
 
       case 6:
-        return (
-          <div className="calculator-step">
-            <h2>What is your weight goal?</h2>
-            <p className="step-description">
-              Your goal determines whether we add or subtract calories from your maintenance level.
-              Choose what aligns with your fitness objectives.
-            </p>
-            <div className="button-group-vertical">
-              <button
-                className={`option-button-large ${formData.weight_goal === 'lose' ? 'selected' : ''}`}
-                onClick={() => handleInputChange('weight_goal', 'lose')}
-              >
-                <span className="option-icon">📉</span>
-                <div>
-                  <div className="option-label">Lose Weight</div>
-                  <div className="option-sublabel">Fat loss / Cutting</div>
-                </div>
-              </button>
-              <button
-                className={`option-button-large ${formData.weight_goal === 'maintain' ? 'selected' : ''}`}
-                onClick={() => handleInputChange('weight_goal', 'maintain')}
-              >
-                <span className="option-icon">⚖️</span>
-                <div>
-                  <div className="option-label">Maintain Weight</div>
-                  <div className="option-sublabel">Body recomposition</div>
-                </div>
-              </button>
-              <button
-                className={`option-button-large ${formData.weight_goal === 'gain' ? 'selected' : ''}`}
-                onClick={() => handleInputChange('weight_goal', 'gain')}
-              >
-                <span className="option-icon">📈</span>
-                <div>
-                  <div className="option-label">Gain Weight</div>
-                  <div className="option-sublabel">Muscle building / Bulking</div>
-                </div>
-              </button>
-            </div>
+  return (
+    <div className="calculator-step">
+      <h2>What is your fitness goal?</h2>
+      <p className="step-description">
+        Your goal determines whether we add or subtract calories from your maintenance level.
+        This should match your workout goals.
+      </p>
+      <div className="button-group-vertical">
+        <button
+          className={`option-button-large ${formData.weight_goal === 'lose' ? 'selected' : ''}`}
+          onClick={() => {
+            handleInputChange('weight_goal', 'lose');
+            handleInputChange('fitness_goal_type', 'lose_fat');
+          }}
+        >
+          <span className="option-icon">🔥</span>
+          <div>
+            <div className="option-label">Lose Fat</div>
+            <div className="option-sublabel">Fat loss / Cutting</div>
           </div>
-        );
+        </button>
+        <button
+          className={`option-button-large ${formData.weight_goal === 'maintain' ? 'selected' : ''}`}
+          onClick={() => {
+            handleInputChange('weight_goal', 'maintain');
+            handleInputChange('fitness_goal_type', 'body_recomposition');
+          }}
+        >
+          <span className="option-icon">⚡</span>
+          <div>
+            <div className="option-label">Body Recomposition</div>
+            <div className="option-sublabel">Maintain weight, lose fat, gain muscle</div>
+          </div>
+        </button>
+        <button
+          className={`option-button-large ${formData.weight_goal === 'gain' ? 'selected' : ''}`}
+          onClick={() => {
+            handleInputChange('weight_goal', 'gain');
+            handleInputChange('fitness_goal_type', 'gain_muscle');
+          }}
+        >
+          <span className="option-icon">💪</span>
+          <div>
+            <div className="option-label">Gain Muscle</div>
+            <div className="option-sublabel">Muscle building / Bulking</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
 
       case 7:
         return (

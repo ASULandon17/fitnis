@@ -41,11 +41,11 @@ export const AuthProvider = ({ children }) => {
         
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: data.user.id,
             full_name: userData.full_name || null,
             updated_at: new Date().toISOString()
-          });
+          }, { onConflict: 'id' });
         
         if (profileError) {
           console.error('Profile creation error:', profileError);
@@ -106,26 +106,49 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Get user profile
+  // Get or create user profile
   const getUserProfile = async (userId) => {
     try {
       console.log('Fetching profile for user:', userId);
       
+      // First try to get the profile
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
-        return null;
+        throw error;
+      }
+      
+      // If no profile exists, create one
+      if (!data) {
+        console.log('Profile not found, creating new profile for user:', userId);
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          throw createError;
+        }
+        
+        console.log('Profile created:', newProfile);
+        return newProfile;
       }
       
       console.log('Profile fetched:', data);
       return data;
     } catch (error) {
-      console.error('Exception fetching profile:', error);
+      console.error('Exception in getUserProfile:', error);
+      // Return null but don't crash
       return null;
     }
   };
@@ -135,19 +158,22 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('Updating profile for user:', userId, 'with:', updates);
       
+      // Perform the update with upsert to handle cases where profile might not exist
       const { data, error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: userId,
           ...updates,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
         })
-        .eq('id', userId)
         .select()
         .single();
 
       if (error) {
         console.error('Error updating profile:', error);
-        return { data: null, error };
+        throw error;
       }
       
       console.log('Profile updated successfully:', data);
@@ -190,6 +216,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     console.log('AuthContext: Initializing...');
+    let mounted = true;
     
     // Get initial session
     const getInitialSession = async () => {
@@ -198,21 +225,28 @@ export const AuthProvider = ({ children }) => {
         
         if (error) {
           console.error('Error getting session:', error);
+          if (mounted) setLoading(false);
+          return;
         }
         
         console.log('Initial session:', session ? 'Found' : 'None');
-        setCurrentUser(session?.user ?? null);
         
-        if (session?.user) {
-          console.log('Fetching profile for initial session');
-          const profile = await getUserProfile(session.user.id);
-          setUserProfile(profile);
+        if (mounted) {
+          setCurrentUser(session?.user ?? null);
+          
+          if (session?.user) {
+            console.log('Fetching profile for initial session');
+            const profile = await getUserProfile(session.user.id);
+            if (mounted) {
+              setUserProfile(profile);
+            }
+          }
+          
+          setLoading(false);
         }
-        
-        setLoading(false);
       } catch (error) {
         console.error('Exception getting initial session:', error);
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -223,22 +257,27 @@ export const AuthProvider = ({ children }) => {
       async (event, session) => {
         console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
         
+        if (!mounted) return;
+        
         setCurrentUser(session?.user ?? null);
         
         if (session?.user) {
           console.log('Auth changed: Fetching profile');
           const profile = await getUserProfile(session.user.id);
-          setUserProfile(profile);
+          if (mounted) {
+            setUserProfile(profile);
+          }
         } else {
           console.log('Auth changed: Clearing profile');
-          setUserProfile(null);
+          if (mounted) {
+            setUserProfile(null);
+          }
         }
-        
-        setLoading(false);
       }
     );
 
     return () => {
+      mounted = false;
       console.log('AuthContext: Cleaning up subscription');
       subscription?.unsubscribe();
     };
@@ -246,9 +285,8 @@ export const AuthProvider = ({ children }) => {
 
   // Add this useEffect to log state changes
   useEffect(() => {
-    console.log('Current user:', currentUser?.email || 'None');
-    console.log('User profile:', userProfile);
-  }, [currentUser, userProfile]);
+    console.log('Auth state - loading:', loading, 'currentUser:', currentUser?.email || 'None', 'userProfile:', userProfile?.username || 'None');
+  }, [loading, currentUser, userProfile]);
 
   const value = {
     currentUser,

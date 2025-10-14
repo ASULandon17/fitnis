@@ -1,0 +1,340 @@
+.my-workouts {
+  animation: fadeIn 0.3s;
+}
+
+.workouts-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #374151;
+}
+
+.workouts-header-section h2 {
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.workout-subtitle {
+  color: #9ca3af;
+  font-size: 1.1rem;
+}
+
+.new-workout-button {
+  padding: 1rem 2rem;
+  border: 2px solid #4ade80;
+  border-radius: 10px;
+  background: transparent;
+  color: #4ade80;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.new-workout-button:hover {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.week-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.week-selector button {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #4ade80;
+  border-radius: 8px;
+  background: transparent;
+  color: #4ade80;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.week-selector button:hover:not(:disabled) {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.week-selector button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.week-indicator {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.workout-schedule {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.workout-day-card {
+  padding: 2rem;
+  border: 2px solid #374151;
+  border-radius: 15px;
+  background: rgba(31, 41, 55, 0.6);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.workout-day-card:hover {
+  border-color: #4ade80;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(74, 222, 128, 0.2);
+}
+
+.workout-day-card.completed {
+  border-color: #22c55e;
+  background: rgba(74, 222, 128, 0.05);
+}
+
+.day-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.day-card-header h3 {
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.check-icon {
+  font-size: 1.5rem;
+  color: #22c55e;
+}
+
+.day-focus {
+  color: #4ade80;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.completion-bar {
+  height: 8px;
+  background: #374151;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.completion-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+  transition: width 0.3s;
+}
+
+.completion-text {
+  text-align: center;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.log-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.log-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.modal-content {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 20px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  border-bottom: 2px solid #374151;
+}
+
+.modal-header h2 {
+  font-size: 2rem;
+  color: #4ade80;
+}
+
+.close-button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #374151;
+  color: #9ca3af;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.close-button:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.exercise-log-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(74, 222, 128, 0.05);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: 10px;
+}
+
+.exercise-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.exercise-log-header h3 {
+  font-size: 1.3rem;
+  color: #fff;
+}
+
+.completed-badge {
+  padding: 0.5rem 1rem;
+  background: #22c55e;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.exercise-target {
+  color: #4ade80;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.sets-log {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.set-number {
+  font-weight: 600;
+  color: #d1d5db;
+}
+
+.reps-input,
+.weight-input {
+  padding: 0.75rem;
+  border: 2px solid #374151;
+  border-radius: 8px;
+  background: rgba(31, 41, 55, 0.6);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.reps-input:focus,
+.weight-input:focus {
+  outline: none;
+  border-color: #4ade80;
+}
+
+.save-exercise-button {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #4ade80;
+  color: #1a1a1a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.save-exercise-button:hover {
+  background: #22c55e;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 2rem;
+  border-top: 2px solid #374151;
+}
+
+.cancel-button,
+.save-all-button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-button {
+  background: #374151;
+  color: #fff;
+}
+
+.cancel-button:hover {
+  background: #4b5563;
+}
+
+.save-all-button {
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: white;
+}
+
+.save-all-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+}
